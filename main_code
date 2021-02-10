@@ -1,0 +1,395 @@
+    /* Name: Nameera Azim
+     * Date: 22 December, 2018
+     * Topic: 6.4.4 Your own game
+     */
+
+#include <bits/stdc++.h>
+#include <iostream>
+#include <string>
+#include <stdlib.h> // --- for screen clear
+#include <conio.h>
+#include <windows.h>
+#include <locale.h> //-- toupper
+
+using namespace std;
+
+//---------- Function Prototype
+
+void Check_Command (void);
+void gotoxy(int, int);
+
+//---------- Base / Super class
+class Begin_Game {
+protected:
+    int User_Score; //--- Calculate User score
+    string User_Name;
+    int X_Cord, Y_Cord;
+    int Arr[4][4];
+
+public:
+    Begin_Game(string nm) {
+        User_Name = nm;
+        X_Cord = 25;
+        Y_Cord = 10;
+        User_Score = 0; //-- Score
+        //--- Array initialized with 0
+        for (int i=0; i<=3; i++)
+            for (int j=0; j <=3; j++)
+                Arr[i][j] = 0;
+    }
+    void Greetings (void);
+    void Disp_Grid (void);
+    void Arr_Display (void);
+
+};
+
+//------------------------------------------------ Sub / derived class
+class Control_Game : public Begin_Game {
+private:
+    int rnd;
+
+public:
+    Control_Game(string nm): Begin_Game(nm){}
+
+    void Start_Game(void);
+    void Go_Up (void);
+    void Go_Left (void);
+    void Go_Down (void);
+    void Go_Right (void);
+    void Reset_Grid (void);
+    void Rnd_Position (void);
+    int Check_Arr (void);
+    void End_Game (int);
+
+};
+
+//------------------------------------ main function
+int main(void)
+{
+    string user = "Unknown";
+    Control_Game *Control = new Control_Game(user);
+
+    Control->Greetings();
+    Control->Disp_Grid();
+    Control->Arr_Display();
+
+    Control->Start_Game();
+
+    return 0;
+}
+
+//-------------------------------- Greeting Screen
+void Control_Game :: Start_Game (void){
+
+    char ch, Chk=0;
+
+    while(true){
+        ch = getch();
+        if (ch == 27) break; //-- If user press ESC, then break the loop
+        ch = toupper(ch);
+
+        switch(ch)
+        {
+            case 'W': Go_Up();    break;
+            case 'A': Go_Left();  break;
+            case 'S': Go_Down();  break;
+            case 'D': Go_Right(); break;
+            case 'R': Reset_Grid(); break;
+            default : continue;
+        }
+        //Sleep(1000); //--- 1000 means 1 sec
+        Disp_Grid();
+        Arr_Display(); //--- Display the result in the grid
+
+        Chk = Check_Arr(); //-- 0 means - no empty array, 1 means still empty space, 2 means one elemnet reaches 2048
+        if (Chk != 1) break;
+    }
+    End_Game(Chk);
+}
+
+//-------------------------------- checking whether the array is full
+int Control_Game :: Check_Arr (void){
+
+    int i,j;
+
+    for (i=0; i<=3; i++) {
+        for (j=0; j <=3; j++) {
+            if (Arr[i][j] >= 2048){ //-- if any elemt is 2048, game is over, return 0...
+                return 2;
+            }
+        }
+    }
+
+    for (i=0; i<=3; i++) {
+        for (j=0; j <=3; j++) {
+            if (Arr[i][j] == 0){
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+//-------------------------------------- End Game Message
+void Control_Game :: End_Game (int k){
+
+    gotoxy (X_Cord+50, Y_Cord+5);
+    switch(k) {
+    case 0: cout<<"GAME OVER!"<<endl; break;
+    case 2: cout<<"YOU WON!"<<endl; break;
+    }
+
+    getch();
+    gotoxy(0,25);
+
+}
+
+//-------------------------------- Greeting Screen
+void Control_Game :: Go_Up (void){
+
+    int sum = 0;
+    for (int col = 0; col <= 3; col++){
+        for (int row = 0; row <= 3; row++){
+            if (Arr[row][col] != 0){
+               if (Arr[row][col] == Arr[row+1][col]){
+                    sum = Arr[row][col] + Arr[row+1][col];
+                    Arr[row][col]=sum;
+                    Arr[row+1][col]=0;
+                    User_Score += sum;
+                    sum = 0;
+               }
+            }
+        }
+    }
+    //--- shifting upward
+    for (int m = 0 ; m <= 3; m++) {
+        for (int col = 0; col <= 3; col++){
+            for (int row = 0; row < 3; row++){
+                if (Arr[row][col] == 0){
+                    Arr[row][col] = Arr[row+1][col];
+                    Arr[row+1][col] = 0;
+                }
+            } //--- for loop - row
+        } //-- for loop - col
+    } //-- for loop - m --- looping four times
+    Rnd_Position();
+}
+
+
+void Control_Game :: Go_Down (void){
+
+    int sum = 0;
+    for (int col = 0; col <= 3; col++){
+        for (int row = 3; row > 0; row--){
+            if (Arr[row][col] != 0){
+               if (Arr[row][col] == Arr[row-1][col]){
+                    sum = Arr[row][col] + Arr[row-1][col];
+                    Arr[row][col]=sum;
+                    Arr[row-1][col]=0;
+                    User_Score += sum;
+                    sum = 0;
+               }
+            }
+        }
+    }
+
+    //--- shifting downward
+    for (int m = 0 ; m <= 3; m++) {
+        for (int col = 0; col <= 3; col++){
+            for (int row = 3; row > 0; row--){
+                if (Arr[row][col] == 0){
+                    Arr[row][col] = Arr[row-1][col];
+                    Arr[row-1][col] = 0;
+                }
+            } //--- for loop - row
+        } //-- for loop - col
+    } //-- for loop --- looping four times
+
+    Rnd_Position();
+}
+
+void Control_Game :: Go_Left (void){
+    int sum = 0;
+    for (int row = 0; row <= 3; row++){
+        for (int col = 0; col <= 3; col++){
+            if (Arr[row][col] != 0){
+               if (Arr[row][col] == Arr[row][col+1]){
+                    sum = Arr[row][col] + Arr[row][col+1];
+                    Arr[row][col]=sum;
+                    Arr[row][col+1]=0;
+                    User_Score += sum;
+                    sum = 0;
+               }
+            }
+        }
+    }
+
+    //--- shifting downward
+    for (int m = 0 ; m <= 3; m++) {
+        for (int row = 0; row <= 3; row++){
+            for (int col = 0; col < 3; col++){
+                if (Arr[row][col] == 0){
+                    Arr[row][col] = Arr[row][col+1];
+                    Arr[row][col+1] = 0;
+                }
+            } //--- for loop - row
+        } //-- for loop - col
+    } //-- for loop --- looping four times
+
+    Rnd_Position();
+}
+
+void Control_Game :: Go_Right (void){
+    int sum = 0;
+    for (int row = 0; row <= 3; row++){
+        for (int col = 3; col > 0; col--){
+            if (Arr[row][col] != 0){
+               if (Arr[row][col] == Arr[row][col-1]){
+                    sum = Arr[row][col] + Arr[row][col-1];
+                    Arr[row][col]=sum;
+                    Arr[row][col-1]=0;
+                    User_Score += sum;
+                    sum = 0;
+               }
+            }
+        }
+    }
+
+    //--- shifting Right
+    for (int m = 0 ; m <= 3; m++) {
+        for (int row = 0; row <= 3; row++){
+            for (int col = 3; col > 0; col--){
+                if (Arr[row][col] == 0){
+                    Arr[row][col] = Arr[row][col-1];
+                    Arr[row][col-1] = 0;
+                }
+            } //--- for loop - row
+        } //-- for loop - col
+    } //-- for loop --- looping four times
+
+    Rnd_Position();
+}
+
+//--------------------------------
+void Control_Game :: Reset_Grid(void){
+
+    User_Score = 0; //-- Score
+
+    //--- Array initialized with 0
+    for (int i=0; i<=3; i++)
+        for (int j=0; j <=3; j++)
+            Arr[i][j] = 0;
+
+    Disp_Grid();
+    Arr_Display(); //--- Display the result in the grid
+
+}
+//------ Place 2 in random position
+void Control_Game :: Rnd_Position (void){
+    int i, j;
+    if (!Check_Arr()) return;
+
+    while (true){
+        i = 0 + ( rand() % ( 3 - 0 + 1 ) );
+        j = 0 + ( rand() % ( 3 - 0 + 1 ) );
+        if (Arr[i][j] == 0 ) {
+                Arr[i][j] = 2;
+                break;
+        }
+    }
+
+}
+
+//-------------------------------- Greeting Screen
+void Begin_Game :: Greetings (void){
+
+    system("CLS");
+
+    gotoxy(20,4);
+    cout << "Welcome to '2048'!";
+
+    gotoxy(20,6);
+    cout << "Developed by: Nameera Azim";
+
+    gotoxy(20,8);
+    cout << "Objective: Add numbers to reach 2048.";
+
+    gotoxy(20,10);
+    cout << "How to play:";
+
+    gotoxy(20,12);
+    cout << "Make the entire grid move up, down, left, or right. The tiles with the same numbers, ";
+
+    gotoxy(20,14);
+    cout << "such as 2 and 2,can be added if they are next to each other. The number 2 will ";
+
+    gotoxy(20,16);
+    cout << "appear in a random tile after each turn.";
+
+    gotoxy(20,20);
+    cout << "Please enter your name : ";
+    cin >> User_Name;
+}
+
+//-------------------------------- Greeting Screen
+void Begin_Game :: Disp_Grid (void){     //--- Display the main grids
+
+    int i,j,k, x=X_Cord, y=Y_Cord;
+    system("CLS");
+
+    gotoxy(x,y-4);
+    cout << User_Name << "'s score : " << User_Score ;
+
+    k = x;
+    for(j=1; j<= 5; j++){      //--- Display the vertical bars
+        for (i=0;i<9;i++){
+            gotoxy(k,y+i);
+            cout << "|";
+        }
+        k += 10;
+    }
+    k = y;
+    for(j=1; j<= 5; j++){     //----  Display the horizontal lines
+        for (i=1;i<40;i++){
+            gotoxy(x+i, k);
+            cout << "-";
+        }
+        k += 2;
+    }
+
+    //--- Display help messages
+    gotoxy(x+5,  y+12); cout << "W";
+    gotoxy(x+2,  y+14); cout << "A";
+    gotoxy(x+5,  y+14); cout << "S";
+    gotoxy(x+8,  y+14); cout << "D";
+    gotoxy(x+20, y+13); cout << "R to Reset";
+    gotoxy(x+20, y+14); cout << "ESC to quit";
+
+}
+
+//-------------------------------- Initialize the array
+void Begin_Game :: Arr_Display (void){
+
+    int i,j, xm=X_Cord, yn=Y_Cord-1;
+
+    for (i=0; i<=3; i++){
+        xm = X_Cord + 2;
+        yn += 2;
+        for (j=0; j <=3; j++) {
+            gotoxy(xm, yn);
+            if (Arr[i][j])
+                printf("%4d",Arr[i][j]);
+            else
+                printf("        ");
+
+            xm += 10;
+        }
+    }
+
+}
+//------------------------------------ Placing the cursor
+void gotoxy( int x, int y )
+{
+    COORD p = { x, y };
+    SetConsoleCursorPosition( GetStdHandle( STD_OUTPUT_HANDLE ), p );
+}
